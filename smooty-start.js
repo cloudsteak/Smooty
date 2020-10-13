@@ -13,6 +13,8 @@ var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 const { type } = require('os');
+var http = require('http');
+//var https = require('https');
 
 var client_id = process.env.SMOOTY_CLIENT_ID;  // Your client id
 var client_secret = process.env.SMOOTY_CLIENT_SECRET; // Your secret
@@ -147,11 +149,6 @@ app.get('/refresh_token', function (req, res) {
 
 console.log('Listening on 39179');
 //app.listen(443);
-
-
-var http = require('http');
-//var https = require('https');
-
 var httpServer = http.createServer(app);
 //var httpsServer = https.createServer(app);
 httpServer.listen(39179);
