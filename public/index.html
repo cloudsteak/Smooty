@@ -68,7 +68,8 @@
       <label for="tab3-2">Search</label>
       <input id="tab3-2" value="tab2" name="tabs-two" type="radio">
       <div id="searchDiv">
-        <h4>Search for Artist or Songs</h4>
+        <h5>Search for Artist or Songs</h5>
+        <p>&NonBreakingSpace;</p>
         <div class="showWhenLoggedIn">
 
         </div>
@@ -78,13 +79,19 @@
             <tr>
               <td style="width: 30vw; min-width: 30vw;">
                 <form id="search-form">
-                  <h3>Search Form</h3>
+                  <!--h3>Search Form</h3-->
                   <p>
                     <label class="djClass"><u>Search for:</u></label><br>
-                    <input class="djRadioButton djClass" type="radio" id=searchForArtist name="search4" value="artist">
-                    <label for="searchForArtist">Artist</label><br>
-                    <input class="djRadioButton" type="radio" id=searchForSong name="search4" value="track" checked>
-                    <label for="searchForSong">Song/Track</label><br>
+                  <table class="djRadioButtonTable">
+                    <tr>
+                      <td class="djRadioButtonColumn"><input class="djRadioButton djClass" type="radio"
+                          id=searchForArtist name="search4" value="artist">
+                        <label class="djRadioButtonLabel" for="searchForArtist">Artist</label><br></td>
+                      <td class="djRadioButtonColumn"><input class="djRadioButton" type="radio" id=searchForSong
+                          name="search4" value="track" checked>
+                        <label class="djRadioButtonLabel" for="searchForSong">Song/Track</label><br></td>
+                    </tr>
+                  </table>
                   </p>
                   <input type="text" id="query" value="" class="form-control inputTextField" />
                   <textarea rows="5" cols="60" name="tracklist" id="tracklist" class="form-control inputTextField"
@@ -97,8 +104,10 @@
                 <div id="artistSearchResults"></div>
 
                 <!-- Track Search result -->
-                <div id="trackSearchResultsTechnical"></div>
-                <div id="trackSearchResults"></div>
+                <div id="trackSearchResultsTechnical" hidden></div>
+                
+                <label class="djLabel" id="resultCount"></label>
+                <div class="djResultDiv" id="trackSearchResults"></div>
               </td>
             </tr>
             <tr>
@@ -146,16 +155,23 @@
           <form id="new-playlist-form">
             <h3>Create Playlist Form</h3>
 
-            <label>Playlist name:</label><br>
+            <label class="djLabel"><u>Playlist name:</u></label><br>
             <input type="text" id="name" value="" class="form-control inputTextField" />
-            <label>Playlist description:</label><br>
+            <label class="djLabel"><u>Playlist description:</u></label><br>
             <input type="text" id="description" value="" class="form-control inputTextField" />
             <p>
-              <label><u>Visibility:</u></label><br>
-              <input class="djRadioButton" type="radio" id=publicPL name="publicPL" value="public">
-              <label for="publicPL">Public</label><br>
-              <input class="djRadioButton" type="radio" id=privatePL name="privatePL" value="private" checked>
-              <label for="privatePL">Private</label><br>
+              <label class="djLabel"><u>Visibility:</u></label>
+            <table class="djRadioButtonTable">
+              <tr>
+                <td class="djRadioButtonColumn"><input class="djRadioButton djClass" type="radio" id="publicPL"
+                    name="publicPL" value="public">
+                  <label class="djRadioButtonLabel" for="publicPL">Public</label><br></td>
+                <td class="djRadioButtonColumn"><input class="djRadioButton djClass" type="radio" id="privatePL"
+                    name="publicPL" value="private" checked>
+                  <label class="djRadioButtonLabel" for="privatePL">Private</label><br></td>
+              </tr>
+            </table>
+
             </p>
             <input type="submit" id="create" class="btn btn-primary" value="Create" />
           </form>
@@ -349,8 +365,8 @@
     // Template for Song/Track based search
     var trackTemplateSource = document.getElementById('track-results-template').innerHTML,
       trackTemplate = Handlebars.compile(trackTemplateSource),
-      trackResultsPlaceholder = document.getElementById('trackSearchResults');
-    trackResultsTechnicalPlaceholder = document.getElementById('trackSearchResultsTechnical');
+      trackResultsPlaceholder = document.getElementById('trackSearchResults'),
+      trackResultsTechnicalPlaceholder = document.getElementById('trackSearchResultsTechnical');
 
     // Template for playlist Creation 
     var playlistTemplateSource = document.getElementById('playlist-results-template').innerHTML,
@@ -418,12 +434,13 @@
         },
         success: function (response) {
           //console.log(response);
-          trackResultsPlaceholder.innerHTML += "<br><br><u><b>" + trackTitle + "</b></u><br>" + trackTemplate(response);
+          trackResultsPlaceholder.innerHTML += "<u><b>" + trackTitle + "</b></u><br>" + trackTemplate(response) + "<br><br>";
 
           for (let i = 0; i < response.tracks.items.length; i++) {
             let currentItem = response.tracks.items[i];
             //console.log(currentItem);
             trackListArray.push('spotify:track:' + currentItem.id);
+            document.getElementById('resultCount').innerHTML = "Result: " + trackListArray.length + " track(s)";
             trackResultsTechnicalPlaceholder.innerHTML += 'spotify:track:' + currentItem.id + ',';
           }
         }
@@ -631,6 +648,10 @@
     // Search form actions
     document.getElementById('search-form').addEventListener('submit', function (e) {
       e.preventDefault();
+      
+      document.getElementById('artistSearchResults').innerHTML = "";
+      document.getElementById('trackSearchResults').innerHTML = "";
+      document.getElementById('resultCount').innerHTML = "";
       let is4Artist = document.getElementById('searchForArtist').checked;
       let is4Track = document.getElementById('searchForSong').checked;
       let tracklistItems = document.getElementById('tracklist').value;
@@ -643,6 +664,7 @@
         document.getElementById('trackSearchResults').innerHTML = '';
         document.getElementById('trackSearchResultsTechnical').innerHTML = '';
         trackListArray = [];
+        document.getElementById('resultCount').innerHTML = "";
         if (tracklistItems.split('\n').length === 1 && document.getElementById('query').value) {
           searchSong(document.getElementById('query').value);
         } else {
@@ -680,7 +702,7 @@
               sleep(1500); // Wait 1,5 sec
               addTracksToPlaylist(playlistID, spareTrackListArray);
               spareTrackListArray = [];
-              if((i === searchResultTechnicalArray.length - 1)){
+              if ((i === searchResultTechnicalArray.length - 1)) {
                 sleep(1500); // Wait 1,5 sec
                 alert("Done");
               }
