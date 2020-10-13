@@ -145,5 +145,14 @@ app.get('/refresh_token', function (req, res) {
   });
 });
 
-console.log('Listening on 443');
-app.listen(443);
+console.log('Listening on 39179');
+//app.listen(443);
+
+
+var http = require('http');
+//var https = require('https');
+
+var httpServer = http.createServer(app);
+//var httpsServer = https.createServer(app);
+httpServer.listen(39179);
+//httpsServer.listen(8443);
