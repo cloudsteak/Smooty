@@ -13,7 +13,6 @@
 <body>
   <h1>Welcome to Smooty</h1>
   <h2><i>Spotify Song Management Tool (SMooTy)</i></h2>
-  <h4>Created by <a href="http://djsipp.hu" target="_blank">DJ Sipp</a></h4>
   <div class="tabs">
     <div class="tab-3">
       <label for="tab3-1">Profile / Login</label>
@@ -105,7 +104,7 @@
 
                 <!-- Track Search result -->
                 <div id="trackSearchResultsTechnical" hidden></div>
-                
+
                 <label class="djLabel" id="resultCount"></label>
                 <div class="djResultDiv" id="trackSearchResults"></div>
               </td>
@@ -178,10 +177,22 @@
           <!-- Playlist result -->
           <div id="playlistCreationResults"></div>
         </div>
+
       </div>
     </div>
   </div>
+  <div>
+    <p
+      style="text-align: center; width: 90vw; left: 0px !important; padding: 0px !important; margin: 0px !important; border-top: 1px dashed; ">
+      <br><a href="/">Reload homepage</a> <small>(It close your login session. Could be good if you have login
+        issue)</small><br><br><i>Spotify Song Management Tool (SMooTy)</i> - Created by <a href="http://djsipp.hu"
+        target="_blank">DJ Sipp</a>
+      <br>
+      <small>Version: 1.0.1
+        <br>&copy; Copyright 2020, <a href="http://djsipp.hu" target="_blank">DJ Sipp</a></small>
+    </p>
 
+  </div>
 
 
 
@@ -648,7 +659,7 @@
     // Search form actions
     document.getElementById('search-form').addEventListener('submit', function (e) {
       e.preventDefault();
-      
+
       document.getElementById('artistSearchResults').innerHTML = "";
       document.getElementById('trackSearchResults').innerHTML = "";
       document.getElementById('resultCount').innerHTML = "";
