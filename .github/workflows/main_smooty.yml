@@ -31,5 +31,5 @@ jobs:
       with:
         app-name: 'smooty'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_6f95bf86b96f4475988acc3baf8030fc }}
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_d323b347842545eb90591df0cbbf27d9 }}
         package: .
