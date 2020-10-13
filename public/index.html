@@ -1,0 +1,730 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Smooty (DJ Sipp)</title>
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./css/style.css">
+  <style type="text/css">
+
+  </style>
+</head>
+
+<body>
+  <h1>Welcome to Smooty</h1>
+  <h2><i>Spotify Song Management Tool (SMooTy)</i></h2>
+  <h4>Created by <a href="http://djsipp.hu" target="_blank">DJ Sipp</a></h4>
+  <div class="tabs">
+    <div class="tab-3">
+      <label for="tab3-1">Profile / Login</label>
+      <input id="tab3-1" name="tabs-two" value="tab1" type="radio" checked="checked">
+      <div>
+        <div id="loginDiv" class="container">
+          <div id="login">
+            <a href="/login" class="btn btn-primary">Log in with Spotify</a>
+          </div>
+          <div id="loggedin">
+            <div id="user-profile">
+            </div>
+            <div id="oauth">
+            </div>
+            <button class="btn btn-default" id="obtain-new-token">Refresh token</button>
+            <button class="btn btn-default" onclick="window.location.href='/'" id="logout">Logout</button>
+          </div>
+        </div>
+
+        <script id="user-profile-template" type="text/x-handlebars-template">
+            <h2>Logged in as {{display_name}}</h2>
+            <div class="media">
+              <div class="pull-left">
+                <img class="media-object" width="150" src="{{images.0.url}}" />
+              </div>
+              <div class="media-body">
+                <dl class="dl-horizontal">
+                  <dt>Display name</dt><dd class="clearfix">{{display_name}}</dd>
+                  <dt>Id</dt><dd>{{id}}</dd>
+                  <dt>Email</dt><dd>{{email}}</dd>
+                  <dt>Spotify URI</dt><dd><a href="{{external_urls.spotify}}">{{external_urls.spotify}}</a></dd>
+                  <dt>Link</dt><dd><a href="{{href}}">{{href}}</a></dd>
+                  <dt>Profile Image</dt><dd class="clearfix"><a href="{{images.0.url}}">{{images.0.url}}</a></dd>
+                  <dt>Country</dt><dd>{{country}}</dd>
+                </dl>
+                <div id="user_id" hidden>{{id}}</div>
+                <div id="href" hidden>{{href}}</div>
+              </div>
+            </div>
+          </script>
+
+        <script id="oauth-template" type="text/x-handlebars-template">
+            <h3 hidden>oAuth info</h3>
+            <dl class="dl-horizontal" hidden>
+              <dt>Access token</dt><dd class="text-overflow">{{access_token}}</dd>
+              <dt>Refresh token</dt><dd class="text-overflow">{{refresh_token}}</dd>
+            </dl>
+          </script>
+      </div>
+    </div>
+    <div class="tab-3">
+      <label for="tab3-2">Search</label>
+      <input id="tab3-2" value="tab2" name="tabs-two" type="radio">
+      <div id="searchDiv">
+        <h4>Search for Artist or Songs</h4>
+        <div class="showWhenLoggedIn">
+
+        </div>
+        <!-- Search form -->
+        <div class="showWhenLoggedIn">
+          <table style="vertical-align: top !important; width: 90vw !important; ">
+            <tr>
+              <td style="width: 30vw; min-width: 30vw;">
+                <form id="search-form">
+                  <h3>Search Form</h3>
+                  <p>
+                    <label class="djClass"><u>Search for:</u></label><br>
+                    <input class="djRadioButton djClass" type="radio" id=searchForArtist name="search4" value="artist">
+                    <label for="searchForArtist">Artist</label><br>
+                    <input class="djRadioButton" type="radio" id=searchForSong name="search4" value="track" checked>
+                    <label for="searchForSong">Song/Track</label><br>
+                  </p>
+                  <input type="text" id="query" value="" class="form-control inputTextField" />
+                  <textarea rows="5" cols="60" name="tracklist" id="tracklist" class="form-control inputTextField"
+                    placeholder="Insert your tracklist here..."></textarea><br>
+                  <input type="submit" id="search" class="btn btn-primary" value="Search" />
+                </form>
+              </td>
+              <td style="max-width: 400px; width: 40vw;">
+                <!-- Artist Search result -->
+                <div id="artistSearchResults"></div>
+
+                <!-- Track Search result -->
+                <div id="trackSearchResultsTechnical"></div>
+                <div id="trackSearchResults"></div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <hr>
+                <!-- Choose a playlist -->
+                <h3>Add search result to a selected playlist</h3>
+                <br>
+                <h4 id="playlistCount"></h4>
+                <!-- Playlist result -->
+                <form id="addto-playlist-form">
+                  <div id="playlistGetResults">
+                    <label class="djClass">/ Playlist name (Collaborative? - Public?) /</label>
+                    <select onchange="getSelectedPlaylistID()" name="playlists" id="playlists"
+                      class="form-control inputComboboxField"></select>
+                    <label class="djClass">Selected list id: </label>
+                    <label class="djClass" id="selectedPlaylistId"></label>
+                    <p>&nbsp;</p>
+                  </div>
+                  <input type="submit" id="add2playlist" class="btn btn-primary" value="Add them to playlist" />
+                </form>
+              </td>
+            </tr>
+          </table>
+
+
+
+
+        </div>
+        <!-- Artist result template -->
+        <script id="artist-results-template" type="text/x-handlebars-template">
+    {{#each artists.items}}
+    <div style="background-image:url({{images.0.url}})" data-album-id="{{id}}" class="cover"></div>  
+    {{/each}}
+</script>
+      </div>
+    </div>
+    <div class="tab-3">
+      <label for="tab3-3">Data</label>
+      <input id="tab3-3" value="tab3" name="tabs-two" type="radio">
+      <div id="dataDiv">
+        <h4>Data management like Playlists</h4>
+        <!-- Create Playlist form -->
+        <div class="showWhenLoggedIn djClass">
+          <form id="new-playlist-form">
+            <h3>Create Playlist Form</h3>
+
+            <label>Playlist name:</label><br>
+            <input type="text" id="name" value="" class="form-control inputTextField" />
+            <label>Playlist description:</label><br>
+            <input type="text" id="description" value="" class="form-control inputTextField" />
+            <p>
+              <label><u>Visibility:</u></label><br>
+              <input class="djRadioButton" type="radio" id=publicPL name="publicPL" value="public">
+              <label for="publicPL">Public</label><br>
+              <input class="djRadioButton" type="radio" id=privatePL name="privatePL" value="private" checked>
+              <label for="privatePL">Private</label><br>
+            </p>
+            <input type="submit" id="create" class="btn btn-primary" value="Create" />
+          </form>
+          <!-- Playlist result -->
+          <div id="playlistCreationResults"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+  <!-- Track result template -->
+  <script id="track-results-template" type="text/x-handlebars-template">
+  {{#each tracks.items}}
+  <div class="track-result" data-track-id="{{id}}">{{name}} - {{id}}</div>
+  {{/each}}
+  </script>
+
+  <!-- Playlist creation result template -->
+  <script id="playlist-results-template" type="text/x-handlebars-template">
+  <div data-playlist-id="{{id}}" class="cover" style="color: rgb(37, 153, 37);"><br/>Creted Playlist: {{name}} <label id="brand_new_playlist">{{id}}</label></div>
+</script>
+
+  <!-- Playlist to dropdown result template -->
+  <script id="playlist-get-results-template" type="text/x-handlebars-template">
+  {{#each items}}
+  <option value="{{id}}">{{name}}</option>
+  {{/each}}
+</script>
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+  <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+
+
+
+
+
+
+  <!-- Main Code -->
+  <script>
+    let trackListArray = [];
+    function getHashParams() {
+      var hashParams = {};
+      var e, r = /([^&;=]+)=?([^&;]*)/g,
+        q = window.location.hash.substring(1);
+      while (e = r.exec(q)) {
+        hashParams[e[1]] = decodeURIComponent(e[2]);
+      }
+      return hashParams;
+    }
+
+    function reloadPage() {
+      location.reload();
+    }
+
+    //This will sort your array
+    function SortByName(a, b) {
+      var aName = a.name.toLowerCase();
+      var bName = b.name.toLowerCase();
+      return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+    }
+
+    function getSelectedPlaylistID() {
+      let allOptions = document.getElementById("playlists");
+      document.getElementById('selectedPlaylistId').innerHTML = allOptions.options[allOptions.selectedIndex].value;
+    }
+
+    //capitalize all words of a string. 
+    function capitalizeWords(string) {
+      return string.replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
+    };
+
+    // Remove special characters from a string
+    function normalizeSting(string) {
+      string = string.toLowerCase();
+      string = string.replaceAll('/', '');
+      string = string.replaceAll('-', '');
+      string = string.replaceAll('–', '');
+      string = string.replaceAll('  ', ' ');
+
+      return capitalizeWords(string);
+    }
+
+    function parseURL(url) {
+      var parser = document.createElement('a'),
+        searchObject = {},
+        queries, split, i;
+      // Let the browser do the work
+      parser.href = url;
+      // Convert query string to object
+      queries = parser.search.replace(/^\?/, '').split('&');
+      for (i = 0; i < queries.length; i++) {
+        split = queries[i].split('=');
+        searchObject[split[0]] = split[1];
+      }
+      return {
+        protocol: parser.protocol,
+        host: parser.host,
+        hostname: parser.hostname,
+        port: parser.port,
+        pathname: parser.pathname,
+        search: parser.search,
+        searchObject: searchObject,
+        hash: parser.hash
+      };
+    }
+
+    (function () {
+
+      /**
+       * Obtains parameters from the hash of the URL
+       * @return Object
+       */
+      var userProfileSource = document.getElementById('user-profile-template').innerHTML,
+        userProfileTemplate = Handlebars.compile(userProfileSource),
+        userProfilePlaceholder = document.getElementById('user-profile');
+
+      var oauthSource = document.getElementById('oauth-template').innerHTML,
+        oauthTemplate = Handlebars.compile(oauthSource),
+        oauthPlaceholder = document.getElementById('oauth');
+
+      var params = getHashParams();
+
+      var access_token = params.access_token,
+        refresh_token = params.refresh_token,
+        error = params.error;
+
+      if (error) {
+        alert('There was an error during the authentication');
+      } else {
+        if (access_token) {
+          // render oauth info
+          oauthPlaceholder.innerHTML = oauthTemplate({
+            access_token: access_token,
+            refresh_token: refresh_token
+          });
+
+          $.ajax({
+            url: 'https://api.spotify.com/v1/me',
+            headers: {
+              'Authorization': 'Bearer ' + access_token
+            },
+            success: function (response) {
+              userProfilePlaceholder.innerHTML = userProfileTemplate(response);
+
+              $('#login').hide();
+              $('#loggedin').show();
+              $('.showWhenLoggedIn').show();
+              $('.tab-3:nth-child(2)').show();
+              $('.tab-3:last-child').show();
+            }
+          });
+        } else {
+          // render initial screen
+          $('#login').show();
+          $('#loggedin').hide();
+          $('.showWhenLoggedIn').hide();
+          $('.tab-3:nth-child(2)').hide();
+          $('.tab-3:last-child').hide();
+        }
+
+        document.getElementById('obtain-new-token').addEventListener('click', function () {
+          $.ajax({
+            url: '/refresh_token',
+            data: {
+              'refresh_token': refresh_token
+            }
+          }).done(function (data) {
+            access_token = data.access_token;
+            oauthPlaceholder.innerHTML = oauthTemplate({
+              access_token: access_token,
+              refresh_token: refresh_token
+            });
+          });
+        }, false);
+      }
+    })();
+
+    // Template for Artist based search
+    var artistTemplateSource = document.getElementById('artist-results-template').innerHTML,
+      artistTemplate = Handlebars.compile(artistTemplateSource),
+      artistResultsPlaceholder = document.getElementById('artistSearchResults'),
+      playingCssClass = 'playing',
+      audioObject = null;
+
+    // Template for Song/Track based search
+    var trackTemplateSource = document.getElementById('track-results-template').innerHTML,
+      trackTemplate = Handlebars.compile(trackTemplateSource),
+      trackResultsPlaceholder = document.getElementById('trackSearchResults');
+    trackResultsTechnicalPlaceholder = document.getElementById('trackSearchResultsTechnical');
+
+    // Template for playlist Creation 
+    var playlistTemplateSource = document.getElementById('playlist-results-template').innerHTML,
+      playlistTemplate = Handlebars.compile(playlistTemplateSource),
+      playlistResultsPlaceholder = document.getElementById('playlistCreationResults');
+
+    // Template for playlist Get 
+    /**var playlistGetTemplateSource = document.getElementById('playlist-get-results-template').innerHTML,
+      playlistGetTemplate = Handlebars.compile(playlistGetTemplateSource),
+      playlistGetResultsPlaceholder = document.getElementById('playlists');**/
+
+    var fetchTracks = function (albumId, callback) {
+      $.ajax({
+        url: 'https://api.spotify.com/v1/albums/' + albumId,
+        success: function (response) {
+          callback(response);
+        }
+      });
+    };
+
+    // Start Search for Artist name
+    var searchArtist = function (query) {
+
+      var params = getHashParams();
+      var access_token = params.access_token,
+        refresh_token = params.refresh_token,
+        error = params.error;
+
+      $.ajax({
+        url: 'https://api.spotify.com/v1/search',
+        type: 'GET',
+        contentType: 'application/json',
+        data: {
+          q: query,
+          type: 'artist'
+        },
+        headers: {
+          'Authorization': 'Bearer ' + access_token
+        },
+        success: function (response) {
+          artistResultsPlaceholder.innerHTML = artistTemplate(response);
+        }
+      });
+    };
+    // End Search for Artist name
+
+    // Start Search for Song
+    var searchSong = function (query, trackTitle = query) {
+
+      var params = getHashParams();
+      var access_token = params.access_token,
+        refresh_token = params.refresh_token,
+        error = params.error;
+
+      $.ajax({
+        url: 'https://api.spotify.com/v1/search',
+        type: 'GET',
+        contentType: 'application/json',
+        data: {
+          q: query,
+          type: 'track'
+        },
+        headers: {
+          'Authorization': 'Bearer ' + access_token
+        },
+        success: function (response) {
+          //console.log(response);
+          trackResultsPlaceholder.innerHTML += "<br><br><u><b>" + trackTitle + "</b></u><br>" + trackTemplate(response);
+
+          for (let i = 0; i < response.tracks.items.length; i++) {
+            let currentItem = response.tracks.items[i];
+            //console.log(currentItem);
+            trackListArray.push('spotify:track:' + currentItem.id);
+            trackResultsTechnicalPlaceholder.innerHTML += 'spotify:track:' + currentItem.id + ',';
+          }
+        }
+      });
+    };
+    // End Search for Song
+
+
+    // Start create Playlist
+    var createPlaylist = function (name, description, isPublic) {
+
+      var params = getHashParams();
+      var access_token = params.access_token,
+        refresh_token = params.refresh_token,
+        error = params.error;
+
+      let user_id = document.getElementById('user_id').innerHTML;
+      let url = document.getElementById('href').innerHTML + '/playlists';
+      $.ajax({
+        url: url,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          name: name,
+          description: description,
+          public: isPublic
+        }),
+        headers: {
+          'Authorization': 'Bearer ' + access_token
+        },
+        success: function (response) {
+          playlistResultsPlaceholder.innerHTML = playlistTemplate(response);
+          var refreshPage = setInterval(reloadPage, 3000);
+
+        },
+        error: function (response) {
+          console.error(response);
+        }
+      });
+    };
+    // End create Playlist
+
+    // Start get Playlists first page
+    var getPlaylists = function (limit = 10) {
+      var params = getHashParams();
+      var access_token = params.access_token,
+        refresh_token = params.refresh_token,
+        error = params.error;
+
+
+      let url = 'https://api.spotify.com/v1/me/playlists';
+      //let url = document.getElementById('href').innerHTML + '/playlists';
+      $.ajax({
+        url: url,
+        type: 'GET',
+        contentType: 'application/json',
+        data: {
+          limit: limit
+        },
+        headers: {
+          'Authorization': 'Bearer ' + access_token
+        },
+        success: function (response) {
+          playlistGetResultsPlaceholder = document.getElementById('playlists')
+          let playlistArray = response.items;
+          for (let i = 0; i < playlistArray.length; i++) {
+            let plOption = document.createElement('option');
+            plOption.value = playlistArray[i].id;
+            plOption.appendChild(document.createTextNode(playlistArray[i].name + ' (' + playlistArray[i].collaborative + ' - ' + playlistArray[i].public + ')'));
+            playlistGetResultsPlaceholder.appendChild(plOption);
+          }
+          getSelectedPlaylistID();
+          document.getElementById('playlistCount').innerHTML = 'Choose a playlist (' + document.getElementById('playlists').length + ')';
+
+          if (limit === playlistArray.length && response.next) {
+            getPlaylistsNextPage(response.next);
+          }
+        },
+        error: function (response) {
+          console.error(response);
+          console.warn("Are you logged in?");
+        }
+      });
+    };
+    // End get Playlists first page
+
+    // Start get Playlists next pages
+    var getPlaylistsNextPage = function (nexturl) {
+      let urlArray = parseURL(nexturl);
+      let url = urlArray.protocol + '//' + urlArray.host + urlArray.pathname;
+      let searchObjects = urlArray.searchObject;
+
+      var params = getHashParams();
+      var access_token = params.access_token,
+        refresh_token = params.refresh_token,
+        error = params.error;
+
+      $.ajax({
+        url: url,
+        type: 'GET',
+        contentType: 'application/json',
+        data: {
+          limit: searchObjects.limit,
+          offset: searchObjects.offset
+        },
+        headers: {
+          'Authorization': 'Bearer ' + access_token
+        },
+        success: function (response) {
+          playlistGetResultsPlaceholder = document.getElementById('playlists')
+          let playlistArray = response.items;
+          for (let i = 0; i < playlistArray.length; i++) {
+            let plOption = document.createElement('option');
+            plOption.value = playlistArray[i].id;
+            plOption.appendChild(document.createTextNode(playlistArray[i].name + ' (' + playlistArray[i].collaborative + ' - ' + playlistArray[i].public + ')'));
+            playlistGetResultsPlaceholder.appendChild(plOption);
+          }
+          if (response.next) {
+            getPlaylistsNextPage(response.next);
+          } else {
+            var sel = $('#playlists');
+            //var selected = sel.val(); // cache selected value, before reordering
+            var opts_list = sel.find('option');
+            opts_list.sort(function (a, b) { return $(a).text() > $(b).text() ? 1 : -1; });
+            sel.html('').append(opts_list);
+            //sel.val(selected); // set cached selected value
+            $("#playlists").prop("selectedIndex", 0);
+            getSelectedPlaylistID();
+            document.getElementById('playlistCount').innerHTML = 'Choose a playlist (' + document.getElementById('playlists').length + ')';
+          }
+        },
+        error: function (response) {
+          console.error(response);
+        }
+      });
+    };
+    // End get Playlists next pages
+
+    function sleep(milliseconds) {
+      const date = Date.now();
+      let currentDate = null;
+      do {
+        currentDate = Date.now();
+      } while (currentDate - date < milliseconds);
+    }
+
+    // Start Add tracks to Playlist
+    var addTracksToPlaylist = function (playlistId, trackList) {
+      console.log(JSON.stringify(
+        { "position": 0, "uris": trackList }
+      ));
+      var params = getHashParams();
+      var access_token = params.access_token,
+        refresh_token = params.refresh_token,
+        error = params.error;
+
+      let url = 'https://api.spotify.com/v1/playlists/' + playlistId + '/tracks';
+
+      $.ajax({
+        url: url,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(
+          { "position": 0, "uris": trackList }
+        ),
+        headers: {
+          'Authorization': 'Bearer ' + access_token
+        },
+        success: function (response) {
+          console.log(response);
+        },
+        error: function (response) {
+          console.error(response);
+        }
+      });
+    };
+    // End Add tracks to Playlist
+
+    /**searchResults.addEventListener('click', function (e) {
+      var target = e.target;
+      console.log(target);
+      if (target !== null && target.classList.contains('cover')) {
+        if (target.classList.contains(playingCssClass)) {
+          audioObject.pause();
+        } else {
+          if (audioObject) {
+            audioObject.pause();
+          }
+          fetchTracks(target.getAttribute('data-album-id'), function (data) {
+            audioObject = new Audio(data.tracks.items[0].preview_url);
+            audioObject.play();
+            target.classList.add(playingCssClass);
+            audioObject.addEventListener('ended', function () {
+              target.classList.remove(playingCssClass);
+            });
+            audioObject.addEventListener('pause', function () {
+              target.classList.remove(playingCssClass);
+            });
+          });
+        }
+      }
+    });
+    **/
+
+    // Search form actions
+    document.getElementById('search-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      let is4Artist = document.getElementById('searchForArtist').checked;
+      let is4Track = document.getElementById('searchForSong').checked;
+      let tracklistItems = document.getElementById('tracklist').value;
+      //console.log(document.getElementById('query').value);
+      if (is4Artist) {
+        searchArtist(document.getElementById('query').value);
+      }
+
+      if (is4Track) {
+        document.getElementById('trackSearchResults').innerHTML = '';
+        document.getElementById('trackSearchResultsTechnical').innerHTML = '';
+        trackListArray = [];
+        if (tracklistItems.split('\n').length === 1 && document.getElementById('query').value) {
+          searchSong(document.getElementById('query').value);
+        } else {
+          let newArray = [];
+          $.each(tracklistItems.split('\n'), function () {
+
+            let trackTitle = normalizeSting(this.toString());
+            //console.log(trackTitle, this.toString());
+            searchSong(trackTitle, this.toString());
+            newArray.push(trackTitle);
+          });
+          //console.log(newArray);
+
+        }
+      }
+    }, false);
+
+    // Add to Playlist actions
+    document.getElementById('addto-playlist-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      let playlistID = document.getElementById('selectedPlaylistId').innerHTML;
+      let searchResultTechnical = document.getElementById('trackSearchResultsTechnical').innerHTML;
+      let searchResultTechnicalArray = trackListArray;
+      //console.log(playlistID);
+      //console.log(searchResultTechnical);
+      //console.log(searchResultTechnicalArray);
+      if (playlistID && searchResultTechnical) {
+        if (searchResultTechnicalArray.length < 99) {
+          addTracksToPlaylist(playlistID, searchResultTechnicalArray);
+        } else {
+          let spareTrackListArray = [];
+          for (let i = 0; i < searchResultTechnicalArray.length; i++) {
+            spareTrackListArray.push(searchResultTechnicalArray[i]);
+            if (((i + 1) % 50 === 0) || (i === searchResultTechnicalArray.length - 1)) {
+              sleep(1500); // Wait 1,5 sec
+              addTracksToPlaylist(playlistID, spareTrackListArray);
+              spareTrackListArray = [];
+              if((i === searchResultTechnicalArray.length - 1)){
+                sleep(1500); // Wait 1,5 sec
+                alert("Done");
+              }
+            }
+          }
+        }
+
+      } else {
+        alert('Playlist or Search result is empty');
+      }
+
+    }, false);
+
+    // Create Playlist Form Action
+    document.getElementById('new-playlist-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      let isPublic = document.getElementById('publicPL').checked;
+      let isPrivate = document.getElementById('privatePL').checked;
+      createPlaylist(document.getElementById('name').value, document.getElementById('description').value, isPublic);
+    }, false);
+
+    window.onload = function () {
+      getPlaylists(50);
+    };
+
+    $(document).ready(function () {
+      //$('#selectedPlaylistId').hide();
+      $('input[type=radio][name=tabs-two]').change(function () {
+        if (this.value == "tab1") {
+          $("#loginDiv").show();
+          $("#dataDiv").hide();
+          $("#searchDiv").hide();
+        } else if (this.value == "tab2") {
+          $("#searchDiv").show();
+          $("#loginDiv").hide();
+          $("#dataDiv").hide();
+        } else if (this.value == "tab3") {
+          $("#dataDiv").show();
+          $("#loginDiv").hide();
+          $("#searchDiv").hide();
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
