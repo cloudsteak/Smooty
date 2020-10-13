@@ -147,9 +147,9 @@ app.get('/refresh_token', function (req, res) {
   });
 });
 
-console.log('Listening on 39179');
+console.log('Listening on 8080');
 //app.listen(443);
 var httpServer = http.createServer(app);
 //var httpsServer = https.createServer(app);
-httpServer.listen(39179);
+httpServer.listen(8080);
 //httpsServer.listen(8443);
