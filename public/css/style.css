@@ -60,6 +60,11 @@
     font-weight: normal;
 }
 
+select option {
+    background-color: rgba(0, 179, 179, 0.9);
+    color: white;
+}
+
 .text-overflow {
     overflow: hidden;
     text-overflow: ellipsis;
