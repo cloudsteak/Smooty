@@ -95,6 +95,15 @@
                   <input type="text" id="query" value="" class="form-control inputTextField" />
                   <textarea rows="5" cols="60" name="tracklist" id="tracklist" class="form-control inputTextField"
                     placeholder="Insert your tracklist here..."></textarea><br>
+                  <label class="djClass">Other options for song/track related search:</label><br>
+                  &nbsp;&nbsp;&nbsp;<input type="checkbox" id="ignoreKaraoke" checked>&nbsp;Ignore 'Karaoke' related tracks<br>
+                  &nbsp;&nbsp;&nbsp;<input type="checkbox" id="ignoreInstrumental" checked>&nbsp;Ignore instrumental versions<br>
+                  &nbsp;&nbsp;&nbsp;<input type="checkbox" id="ignoreAcoustic" checked>&nbsp;Ignore acoustic versions<br>
+                  &nbsp;&nbsp;&nbsp;<input type="checkbox" id="ignoreTikTok" checked>&nbsp;Ignore 'Tiktok' related versions<br>
+                  &nbsp;&nbsp;&nbsp;<input type="checkbox" id="ignore816-bit" checked>&nbsp;Ignore '8-bit' and '16-bit' related tracks<br>
+                  <br>
+                  <!--input type="checkbox" id="checkSongTitle" checked>&nbsp;Show tracks only with exact same song title (strict mode)<br>
+                  <br-->
                   <input type="submit" id="search" class="btn btn-primary" value="Search" />
                 </form>
               </td>
@@ -188,8 +197,8 @@
         issue)</small><br><br><i>Spotify Song Management Tool (SMooTy)</i> - Created by <a href="http://djsipp.hu"
         target="_blank">DJ Sipp</a>
       <br>
-      <small>Version: 1.0.1
-        <br>&copy; Copyright 2020, <a href="http://djsipp.hu" target="_blank">DJ Sipp</a></small>
+      <small>Version: 1.2.0
+        <br>&copy; Copyright 2020, <a href="https://djsipp.hu" target="_blank">DJ Sipp</a></small>
     </p>
 
   </div>
@@ -228,6 +237,17 @@
 
   <!-- Main Code -->
   <script>
+    let iKaraokee = true;
+    let iInstrumental = true;
+    let iAcoustic = true;
+    let iTiktok = true;
+    let i816Bit = true;
+    let strictMode = true;
+
+    let isrcArray = [];
+    let trackDataArray = [];
+
+
     let trackListArray = [];
     function getHashParams() {
       var hashParams = {};
@@ -445,14 +465,56 @@
         },
         success: function (response) {
           //console.log(response);
-          trackResultsPlaceholder.innerHTML += "<u><b>" + trackTitle + "</b></u><br>" + trackTemplate(response) + "<br><br>";
+          trackResultsPlaceholder.innerHTML += "<u><b>" + trackTitle + "</b></u><br>";
 
           for (let i = 0; i < response.tracks.items.length; i++) {
             let currentItem = response.tracks.items[i];
             //console.log(currentItem);
-            trackListArray.push('spotify:track:' + currentItem.id);
-            document.getElementById('resultCount').innerHTML = "Result: " + trackListArray.length + " track(s)";
-            trackResultsTechnicalPlaceholder.innerHTML += 'spotify:track:' + currentItem.id + ',';
+            // Init indicators
+            let kSkip = false;
+            let iSkip = false;
+            let aSkip = false
+            let tSkip = false;
+            let bitSkip = false;
+            let existingISRC = false;
+            let sameTitle = false;
+            // Karaoke
+            if (iKaraokee && (currentItem.name).toLowerCase().includes('karaoke')) { kSkip = true; }
+            // Instrumental
+            if (iInstrumental && (currentItem.name).toLowerCase().includes('instrument')) { iSkip = true; }
+            // Acoustic
+            if (iAcoustic && (currentItem.name).toLowerCase().includes('acoustic')) { aSkip = true; }
+            // TikTok
+            if (iTiktok && (currentItem.name).toLowerCase().includes('tiktok')) { tSkip = true; }
+            // 8-bit & 16-bit
+            if (i816Bit) {
+              if (currentItem.name.toLowerCase().includes('8-bit') || currentItem.name.toLowerCase().includes('16-bit') || currentItem.name.toLowerCase().includes('8bit') || currentItem.name.toLowerCase().includes('16bit')) { bitSkip = true; }
+            }
+            // Check ISRC
+            for (let e = 0; e < isrcArray.length; e++) {
+              if (isrcArray[e] === currentItem.external_ids.isrc) {
+                existingISRC = true;
+              }
+            }
+
+            /*if(strictMode){
+              if(trackDataArray.length > 0){
+                console.log(trackDataArray);
+              }
+            }*/
+
+            if (!kSkip && !iSkip && !aSkip && !tSkip && !bitSkip && !existingISRC) {
+              // Add ISRC to vadidation array
+              isrcArray.push(currentItem.external_ids.isrc);
+              // Show track in result
+              trackResultsPlaceholder.innerHTML += " - " + currentItem.name + " (" + currentItem.id + " - isrc: " + currentItem.external_ids.isrc + ")<br>";
+              trackListArray.push('spotify:track:' + currentItem.id);
+              document.getElementById('resultCount').innerHTML = "Result: " + trackListArray.length + " track(s)";
+              trackResultsTechnicalPlaceholder.innerHTML += 'spotify:track:' + currentItem.id + ',';
+            } else {
+              // Ignore conditions meet
+              console.log(currentItem.name + " - isrc: " + currentItem.external_ids.isrc);
+            }
           }
         }
       });
@@ -656,6 +718,9 @@
     });
     **/
 
+
+
+
     // Search form actions
     document.getElementById('search-form').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -672,6 +737,13 @@
       }
 
       if (is4Track) {
+        iKaraokee = $('#ignoreKaraoke').is(':checked');
+        iInstrumental = $('#ignoreInstrumental').is(':checked');
+        iAcoustic = $('#ignoreAcoustic').is(':checked');
+        iTiktok = $('#ignoreTikTok').is(':checked');
+        i816Bit = $('#ignore816-bit').is(':checked');
+        //strictMode = $('#checkSongTitle').is(':checked');
+        isrcArray = [];
         document.getElementById('trackSearchResults').innerHTML = '';
         document.getElementById('trackSearchResultsTechnical').innerHTML = '';
         trackListArray = [];
@@ -680,14 +752,24 @@
           searchSong(document.getElementById('query').value);
         } else {
           let newArray = [];
+          let tempArray = [];
           $.each(tracklistItems.split('\n'), function () {
-
-            let trackTitle = normalizeSting(this.toString());
-            //console.log(trackTitle, this.toString());
-            searchSong(trackTitle, this.toString());
-            newArray.push(trackTitle);
+            tempArray.push(this.toString());
           });
-          //console.log(newArray);
+          for (let i = 0; i < tempArray.length; i++) {
+            let trackTitle = normalizeSting(tempArray[i]);
+            //console.log(trackTitle, this.toString());
+            /*trackDataArray = tempArray[i].split('-');
+            if(trackDataArray.length <= 1){
+              trackDataArray = tempArray[i].split('–');
+            }*/
+            searchSong(trackTitle, tempArray[i]);
+            newArray.push(trackTitle);
+            //console.log(newArray);
+          }
+
+
+
 
         }
       }
